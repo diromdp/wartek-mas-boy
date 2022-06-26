@@ -7,9 +7,7 @@ import {
    Modal,
    ModalOverlay,
    ModalContent,
-   ModalFooter,
    ModalBody,
-   ModalCloseButton,
    Button
 } from '@chakra-ui/react';
 import Link from 'next/link';
@@ -20,9 +18,10 @@ import { FiArrowRight } from 'react-icons/fi';
 
 import client from '../lib/grapql';
 import { getDataCompare } from '../store/compare/action';
-import { PokemonsGrapQL } from '../apollo/queries'
+import { PokemonsGrapQL, PokemonQueryGrapQLFilter } from '../apollo/queries'
 import { padStart } from '../lib/lib';
 import Header from '../component/header';
+import Drawers from '../component/drawer';
 import styles from '../styles/Home.module.css';
 
 interface Props {
@@ -41,7 +40,6 @@ const DEFAULT_PAGE = 1
 const DEFAULT_OFFSET = 0
 const DEFAULT_COUNT = 0
 
-
 const Home: FunctionComponent<Props> = () => {
    const [poko, setPoko] = useState(null);
    const [isloading, setLoading] = useState(true);
@@ -49,10 +47,10 @@ const Home: FunctionComponent<Props> = () => {
    const [count, setCount] = useState(0);
    const [isShowChecbox, setIsShowCheckbox] = useState(false);
    const [valueCompare, setValueCompare] = useState([]);
+   const [isOpenDrawer, setOpenDrawer] = useState(false);
+   const [filterType, setFilterType] = useState([]);
    const router = useRouter();
    const dispatch = useDispatch();
-
-
 
    let state: State = {
       limit: DEFAULT_LIMIT,
@@ -68,14 +66,18 @@ const Home: FunctionComponent<Props> = () => {
 
    useEffect(() => {
       const _handlerGetData = async () => {
-         const { data } = await client.query({
-            query: PokemonsGrapQL,
-            variables: { limit: variables.limit, offset: variables.offset }
-         });
-         setPoko(data ? data.pokemons : null)
-         setLoading(false)
-         setSucces(true)
-         setCount(data ? data.aggregate.aggregate.count : 0)
+         try {
+            const { data } = await client.query({
+               query: PokemonsGrapQL,
+               variables: { limit: variables.limit, offset: variables.offset }
+            });
+            setPoko(data ? data.pokemons : null)
+            setLoading(false)
+            setSucces(true)
+            setCount(data ? data.aggregate.aggregate.count : 0)
+         } catch (error) {
+            console.log(error)
+         }
       }
 
       if (!poko) {
@@ -84,15 +86,30 @@ const Home: FunctionComponent<Props> = () => {
    }, [])
 
    const fetchMoreData = async (val: number) => {
-      const dataCurrent: any = poko;
-      const offsetVal = variables.limit + val;
-      const { data } = await client.query({
-         query: PokemonsGrapQL,
-         variables: { limit: variables.limit, offset: offsetVal }
-      });
-      const joinData = dataCurrent ? dataCurrent.concat(data.pokemons) : null;
+      try {
+         const dataCurrent: any = poko;
+         const offsetVal = variables.limit + val;
+         let queryVar: any = {};
+         if(filterType.length != 0) {
+            queryVar = {
+               query: PokemonQueryGrapQLFilter,
+               variables: { filterName: filterType, limit: variables.limit, offset: offsetVal }
+            }
+            
+         } else {
+            queryVar = {
+               query: PokemonsGrapQL,
+               variables: { limit: variables.limit, offset: offsetVal }
+            }
+         }
 
-      setPoko(joinData)
+         const { data } = await client.query(queryVar)
+         let joinData = dataCurrent ? dataCurrent.concat(data.pokemons) : null;
+         setPoko(joinData)
+
+      } catch (error) {
+         console.log(error)
+      }
    }
 
    const handleCheckboxChange = (val: any) => {
@@ -103,6 +120,27 @@ const Home: FunctionComponent<Props> = () => {
          const finalData = valueCompare.concat(data);
          setValueCompare(finalData)
          dispatch(getDataCompare(finalData))
+      }
+   }
+
+   const closeDrawer = (val: boolean) => {
+      setOpenDrawer(val)
+   }
+   
+   const handlerSubmitFilter =  async(val1: any, val2: any) => {
+      try {
+         const { data } = await client.query({
+            query: PokemonQueryGrapQLFilter,
+            variables: { filterName: val1, limit: variables.limit, offset: variables.offset }
+         });
+         setPoko(data ? data.pokemons : null)
+         setLoading(false)
+         setSucces(true)
+         setFilterType(val1)
+         setOpenDrawer(false),
+         setCount(data ? data.aggregate.aggregate.count : 0)
+      } catch (error) {
+         console.log(error)
       }
    }
 
@@ -219,13 +257,13 @@ const Home: FunctionComponent<Props> = () => {
          </>
       )
    }
-   console.log(valueCompare)
 
    return (
       <div className={styles.container}>
          <main className="container">
             <Header
                setShowCheckbox={(val: boolean) => setIsShowCheckbox(val)}
+               setOpenFilter={(val: boolean) => setOpenDrawer(val)}
             />
             <div className="container p-4">
                <h1 className="font-bold text-2xl mb-3">Pokédex ({count})</h1>
@@ -291,6 +329,11 @@ const Home: FunctionComponent<Props> = () => {
                      </ModalBody>
                   </ModalContent>
                </Modal>
+               <Drawers
+                  isOpen={isOpenDrawer}
+                  onClose={(val: boolean) => closeDrawer(val)}
+                  onSubmitItem={(val1: any, val2: any) => handlerSubmitFilter(val1, val2)}
+               />
             </div>
          </main>
       </div>

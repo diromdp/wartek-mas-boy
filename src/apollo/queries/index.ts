@@ -1,4 +1,4 @@
-import {gql} from '@apollo/client';
+import { gql } from '@apollo/client';
 
 export const PokemonsGrapQL = gql`
 query Pokemons($limit: Int, $offset: Int) {
@@ -31,6 +31,43 @@ query Pokemons($limit: Int, $offset: Int) {
     }
   }
   aggregate: pokemon_v2_pokemon_aggregate {
+    aggregate {
+      count
+    }
+  }
+}`;
+
+export const PokemonQueryGrapQLFilter = gql`
+query PokemonFilter($filterName: [String], $limit: Int, $offset: Int) {
+  pokemons: pokemon_v2_pokemon(limit: $limit, offset: $offset, order_by: {id: asc}, where: {pokemon_v2_pokemontypes: {pokemon_v2_type: {name: {_in: $filterName}}}}) {
+    id
+    name
+    order
+    height
+    weight
+    types: pokemon_v2_pokemontypes {
+      type: pokemon_v2_type {
+        name
+        id
+      }
+    }
+    abilities: pokemon_v2_pokemonabilities {
+      id
+      ability: pokemon_v2_ability {
+        id
+        name
+      }
+    }
+    stats: pokemon_v2_pokemonstats {
+      id
+      base_stat
+      stat: pokemon_v2_stat {
+        id
+        name
+      }
+    }
+  }
+  aggregate: pokemon_v2_pokemon_aggregate(where: {pokemon_v2_pokemontypes: {pokemon_v2_type: {name: {_in: $filterName}}}}) {
     aggregate {
       count
     }

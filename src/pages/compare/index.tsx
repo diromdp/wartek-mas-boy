@@ -23,7 +23,6 @@ class ComparePages extends Component<Props, State> {
    render() {
       const { compare } = this.props;
 
-      console.log(compare)
       return (
          <>
             <main className={styles.container}>

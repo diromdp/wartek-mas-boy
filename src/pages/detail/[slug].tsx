@@ -17,7 +17,6 @@ interface State {
 
 }
 
-
 class Detail extends Component<Props, State> {
    constructor(props: Props) {
       super(props);
@@ -38,8 +37,8 @@ class Detail extends Component<Props, State> {
       data.egg_groups && data.egg_groups.map((item: any) => {
          egg_group.push(item.group.name)
       })
-      return (
 
+      return (
          <main className={styles.container}>
             <Header
                urlPage="/"
