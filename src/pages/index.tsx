@@ -1,98 +1,296 @@
-import type { NextPage } from 'next'
-import Head from 'next/head';
-import { Badge, Stack, Skeleton } from '@chakra-ui/react'
+import React, { FunctionComponent } from 'react';
+import { useEffect, useState } from 'react';
+import {
+   Badge,
+   Stack,
+   Skeleton,
+   Modal,
+   ModalOverlay,
+   ModalContent,
+   ModalFooter,
+   ModalBody,
+   ModalCloseButton,
+   Button
+} from '@chakra-ui/react';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
+import { useDispatch } from "react-redux";
+import InfiniteScroll from 'react-infinite-scroll-component';
+import { FiArrowRight } from 'react-icons/fi';
 
+import client from '../lib/grapql';
+import { getDataCompare } from '../store/compare/action';
+import { PokemonsGrapQL } from '../apollo/queries'
+import { padStart } from '../lib/lib';
 import Header from '../component/header';
 import styles from '../styles/Home.module.css';
 
-const Home: NextPage = () => {
+interface Props {
+
+}
+
+interface State {
+   count: number,
+   limit: number
+   page: number,
+   offset: number,
+}
+
+const DEFAULT_LIMIT = 12
+const DEFAULT_PAGE = 1
+const DEFAULT_OFFSET = 0
+const DEFAULT_COUNT = 0
+
+
+const Home: FunctionComponent<Props> = () => {
+   const [poko, setPoko] = useState(null);
+   const [isloading, setLoading] = useState(true);
+   const [isSuccess, setSucces] = useState(false)
+   const [count, setCount] = useState(0);
+   const [isShowChecbox, setIsShowCheckbox] = useState(false);
+   const [valueCompare, setValueCompare] = useState([]);
+   const router = useRouter();
+   const dispatch = useDispatch();
+
+
+
+   let state: State = {
+      limit: DEFAULT_LIMIT,
+      page: DEFAULT_PAGE,
+      offset: DEFAULT_OFFSET,
+      count: DEFAULT_COUNT,
+   }
+
+   let variables = {
+      limit: state.limit,
+      offset: state.offset,
+   };
+
+   useEffect(() => {
+      const _handlerGetData = async () => {
+         const { data } = await client.query({
+            query: PokemonsGrapQL,
+            variables: { limit: variables.limit, offset: variables.offset }
+         });
+         setPoko(data ? data.pokemons : null)
+         setLoading(false)
+         setSucces(true)
+         setCount(data ? data.aggregate.aggregate.count : 0)
+      }
+
+      if (!poko) {
+         _handlerGetData();
+      }
+   }, [])
+
+   const fetchMoreData = async (val: number) => {
+      const dataCurrent: any = poko;
+      const offsetVal = variables.limit + val;
+      const { data } = await client.query({
+         query: PokemonsGrapQL,
+         variables: { limit: variables.limit, offset: offsetVal }
+      });
+      const joinData = dataCurrent ? dataCurrent.concat(data.pokemons) : null;
+
+      setPoko(joinData)
+   }
+
+   const handleCheckboxChange = (val: any) => {
+      const data: any = []
+      data.push(val);
+
+      if (valueCompare.length < 2) {
+         const finalData = valueCompare.concat(data);
+         setValueCompare(finalData)
+         dispatch(getDataCompare(finalData))
+      }
+   }
+
+   const _handlerSuccess = () => {
+      const dataPoko: any = poko;
+      const length: number = dataPoko.length
+      return (
+         <>
+            <InfiniteScroll
+               dataLength={dataPoko.length}
+               next={() => fetchMoreData(length)}
+               hasMore={true}
+               className="grid grid-cols-2 gap-6"
+               loader={<h4 className="text-base mt-3 text-center">Loading...</h4>}
+            >
+               {
+                  dataPoko && dataPoko.map((item: any, index: number) => {
+                     return (
+                        <>
+                           <div className="flex flex-col relative">
+                              {
+                                 isShowChecbox &&
+                                 <div className="absolute top-2 z-10 right-2">
+                                    <input
+                                       onChange={() => handleCheckboxChange(item)}
+                                       type="checkbox"
+                                       id={`custom-checkbox-${index}`}
+                                       name={item.name}
+                                       value={item.name}
+                                       className="h-6 w-6 rounded-xl"
+                                    />
+                                 </div>
+                              }
+
+                              <Link href={`/detail/${item.name}`}>
+                                 <a key={index} className={`bg-${item.types[0].type.name} rounded-md text-white p-4 relative`}>
+
+                                    <div>
+                                       <img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${item.id}.png`} />
+                                    </div>
+
+                                    <div className="">
+                                       <span>{`#${padStart(item.id, 3)}`}</span>
+                                       <h3>{item.name}</h3>
+                                       <div className="mt-2">
+                                          <Stack direction='row'>
+                                             {
+                                                item.types.map((type: any, index: number) => {
+                                                   return (
+                                                      <>
+                                                         <Badge key={index} className={`rounded-full bg-type-${type.type.name} text-white text-xs font-normal p-2`}>{type.type.name}</Badge>
+                                                      </>
+                                                   )
+                                                })
+                                             }
+                                          </Stack>
+                                       </div>
+                                    </div>
+                                 </a>
+                              </Link>
+                           </div>
+
+                        </>
+                     )
+                  })
+               }
+            </InfiniteScroll>
+         </>
+      )
+   }
+
+   const _handlerLoading = () => {
+      const arry: number[] = [1, 2, 3, 4, 5, 6]
+      return (
+         <>
+            <InfiniteScroll
+               dataLength={30}
+               next={() => fetchMoreData(3)}
+               hasMore={true}
+               className="grid grid-cols-2 gap-6"
+               loader={<h4 className="text-base mt-3 text-center">Loading...</h4>}
+            >
+               {
+                  arry.map(item => {
+                     return (
+                        <>
+                           <Link key={item} href="/">
+                              <a>
+                                 <Skeleton className="rounded-md">
+                                    <div className="bg-emerald-400 rounded-md text-white p-2">
+                                       <div>
+                                          <img src={'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1.png'} />
+                                       </div>
+                                       <div className="">
+                                          <span>#001</span>
+                                          <h3>Bulbarus</h3>
+                                          <div className="">
+                                             <Stack direction='row'>
+                                                <Badge className="rounded-full" colorScheme='green'>Success</Badge>
+                                                <Badge className="rounded-full" colorScheme='red'>Removed</Badge>
+                                                <Badge className="rounded-full" colorScheme='purple'>New</Badge>
+                                             </Stack>
+                                          </div>
+                                       </div>
+                                    </div>
+                                 </Skeleton>
+                              </a>
+                           </Link>
+                        </>
+                     )
+                  })
+               }
+            </InfiniteScroll>
+         </>
+      )
+   }
+   console.log(valueCompare)
+
    return (
       <div className={styles.container}>
-         <Head>
-            <title>Create Next App</title>
-            <meta name="description" content="Generated by create next app" />
-            <link rel="icon" href="/favicon.ico" />
-         </Head>
-
          <main className="container">
             <Header
-
+               setShowCheckbox={(val: boolean) => setIsShowCheckbox(val)}
             />
             <div className="container p-4">
-               <h1 className="font-bold text-2xl mb-3">Pokédex (892)</h1>
-               <div className="grid grid-cols-2 gap-2">
-                  <Link href="/">
-                     <a>
-                        <Skeleton className="rounded-md">
-                           <div className="bg-emerald-400 rounded-md text-white p-2">
-                              <div className>
-                                 <img src={'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1.png'} />
-                              </div>
-                              <div className="">
-                                 <span>#001</span>
-                                 <h3>Bulbarus</h3>
-                                 <div className="">
-                                    <Stack direction='row'>
-                                       <Badge className="rounded-full" colorScheme='green'>Success</Badge>
-                                       <Badge className="rounded-full" colorScheme='red'>Removed</Badge>
-                                       <Badge className="rounded-full" colorScheme='purple'>New</Badge>
-                                    </Stack>
-                                 </div>
-                              </div>
-                           </div>
-                        </Skeleton>
-                     </a>
-                  </Link>
-                  <div className="bg-emerald-400 rounded-md text-white p-2">
-                     <div className>
-                        <img src={'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1.png'} />
-                     </div>
-                     <div className="">
-                        <span>#001</span>
-                        <h3>Bulbarus</h3>
-                        <div className="">
-                           <Stack direction='row'>
-                              <Badge className="rounded-full" colorScheme='green'>Success</Badge>
-                              <Badge className="rounded-full" colorScheme='red'>Removed</Badge>
-                              <Badge className="rounded-full" colorScheme='purple'>New</Badge>
-                           </Stack>
-                        </div>
-                     </div>
-                  </div>
-                  <div className="bg-emerald-400 rounded-md text-white p-2">
-                     <div className>
-                        <img src={'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1.png'} />
-                     </div>
-                     <div className="">
-                        <span>#001</span>
-                        <h3>Bulbarus</h3>
-                        <div className="">
-                           <Stack direction='row'>
-                              <Badge className="rounded-full" colorScheme='green'>Success</Badge>
-                              <Badge className="rounded-full" colorScheme='red'>Removed</Badge>
-                              <Badge className="rounded-full" colorScheme='purple'>New</Badge>
-                           </Stack>
-                        </div>
-                     </div>
-                  </div>
-                  <div className="bg-emerald-400 rounded-md text-white p-2">
-                     <div>
-                        <img src={'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1.png'} />
-                     </div>
-                     <div className="">
-                        <span>#001</span>
-                        <h3>Bulbarus</h3>
-                        <div className="">
-                           <Stack direction='row'>
-                              <Badge className="rounded-full" colorScheme='green'>Success</Badge>
-                              <Badge className="rounded-full" colorScheme='red'>Removed</Badge>
-                              <Badge className="rounded-full" colorScheme='purple'>New</Badge>
-                           </Stack>
-                        </div>
-                     </div>
-                  </div>
+               <h1 className="font-bold text-2xl mb-3">Pokédex ({count})</h1>
+               <div className="">
+                  {
+                     isloading && _handlerLoading()
+                  }
+                  {
+                     isSuccess && _handlerSuccess()
+                  }
                </div>
+               <Modal
+                  isOpen={valueCompare.length == 2 ? true : false}
+                  onClose={() => {
+                     setValueCompare([])
+                     setIsShowCheckbox(false)
+                  }
+                  }>
+                  <ModalOverlay />
+                  <ModalContent>
+                     <ModalBody>
+                        <div className="flex flex-row justify-between">
+                           <div className="flex flex-row">
+                              {
+                                 valueCompare && valueCompare.map((item: any, index: number) => {
+                                    return (
+                                       <>
+                                          <img className="w-24 h-24 block" src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${item.id}.png`} />
+                                       </>
+
+                                    )
+                                 })
+                              }
+                           </div>
+                           <div className="flex flex-row items-center">
+                              {
+                                 valueCompare.length < 2 &&
+                                 <Button
+                                    className="bg-slate-300"
+                                    mr={3}
+                                    onClick={() => {
+                                       setValueCompare([])
+                                       setIsShowCheckbox(false)
+                                    }}
+                                 >
+                                    Close
+                                 </Button>
+                              }
+                              {
+                                 valueCompare.length == 2 &&
+                                 <Button
+                                    className="bg-blue-400 text-base text-white rounded-xl"
+                                    mr={3}
+                                    onClick={() => {
+                                       router.push('/compare')
+                                    }}
+                                 >
+                                    Submit <FiArrowRight className="ml-3 text-base" size={18} height={18} width={18} />
+                                 </Button>
+                              }
+                           </div>
+                        </div>
+                     </ModalBody>
+                  </ModalContent>
+               </Modal>
             </div>
          </main>
       </div>
