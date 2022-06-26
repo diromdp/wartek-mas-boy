@@ -6,16 +6,8 @@ import styles from '../../styles/Home.module.css';
 import Header from '../../component/header';
 
 
-interface Props {
-   compare: any
-}
-
-interface State {
-
-}
-
-class ComparePages extends Component<Props, State> {
-   constructor(props: Props) {
+class ComparePages extends Component {
+   constructor(props) {
       super(props);
       this.state = {}
    }
@@ -32,7 +24,7 @@ class ComparePages extends Component<Props, State> {
                <div className="grid grid-cols-2 place-content-center gap-2 mb-4">
 
                   {
-                     compare.compare && compare.compare.map((item: any, index: number) => {
+                     compare.compare && compare.compare.map((item, index) => {
                         return (
                            <React.Fragment key={index}>
                               <div className="text-center">
@@ -43,7 +35,7 @@ class ComparePages extends Component<Props, State> {
                                        <Stack direction='row' className="justify-center">
 
                                           {
-                                             item.types.map((type: any, index: number) => {
+                                             item.types.map((type, index) => {
                                                 return (
                                                    <>
                                                       <Badge key={index} className={`rounded-full bg-type-${type.type.name} text-white text-xs font-normal p-1`}>{type.type.name}</Badge>
@@ -108,7 +100,7 @@ class ComparePages extends Component<Props, State> {
                                  <section className="border-2 border-zinc-300 border-solid p-4 mb-4 rounded-xl">
                                     <h2 className="font-bold text-md mb-3">Stats</h2>
                                     {
-                                       item.stats && item.stats.map((stats: any, index: number) => {
+                                       item.stats && item.stats.map((stats, index) => {
                                           return (
                                              <div key={index} className="flex flex-col mb-2">
                                                 <div className="flex-row flex justify-between">
@@ -135,11 +127,11 @@ class ComparePages extends Component<Props, State> {
    }
 }
 
-const mapStateToProps = (state: any) => {
+const mapStateToProps = (state) => {
    const { compare } = state;
    return {
       compare,
    };
 };
 
-export default connect(mapStateToProps)(ComparePages);
+export default connect(mapStateToProps, null)(ComparePages);
