@@ -132,13 +132,14 @@ class Detail extends Component<Props, State> {
                                  evolution.species &&
                                  evolution.species.map((item: any, index: number) => {
                                     if (item.evolves_from_species_id) {
-                                       const evolutions: any = item.evolutions.length > 0 ? item.evolutions[0] : null
+                                       const evolutions: any = item.evolutions.length > 0 ? item.evolutions[0] : false
+                                       console.log(evolutions)
                                        return (
                                           <div className="">
                                              <div key={index} className="block">
                                                 <span className="block text-base font-normal">
                                                    {
-                                                      evolutions ? `Level ${evolutions.min_level}++` : 'Level 0'
+                                                      evolutions ? `Level ${evolutions.min_level ? evolutions.min_level+'++' : 'tidak diketahui'}` : 'Level 0'
                                                    }
                                                 </span>
                                                 <div className="grid grid-cols-1 gap-2 pt-3">
