@@ -262,7 +262,7 @@ const Home: FunctionComponent<Props> = () => {
       <div className={styles.container}>
          <main className="container">
             <Header
-               setShowCheckbox={(val: boolean) => setIsShowCheckbox(val)}
+               setShowCheckbox={() => setIsShowCheckbox(!isShowChecbox)}
                setOpenFilter={(val: boolean) => setOpenDrawer(val)}
             />
             <div className="container p-4">

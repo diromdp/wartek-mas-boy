@@ -21,7 +21,7 @@ class Header extends Component {
                      </Link>
                   </div> :
                   <div className="flex flex-row justify-between">
-                     <Button colorScheme='gray' onClick={() => setShowCheckbox(true)} className="mr-3 bg-transparent outline-0 focus:shadow-none">COMPARE</Button>
+                     <Button colorScheme='gray' onClick={() => setShowCheckbox()} className="mr-3 bg-transparent outline-0 focus:shadow-none">COMPARE</Button>
                      <Button onClick={() => setOpenFilter(true)} className="bg-transparent outline-0 focus:shadow-none"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg></Button>
                   </div>
             }
