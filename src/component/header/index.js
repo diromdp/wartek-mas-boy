@@ -7,6 +7,7 @@ class Header extends Component {
       super(props);
       this.state = {}
    }
+   
    render() {
       const { urlPage, setShowCheckbox, setOpenFilter} = this.props;
       return (

@@ -22,7 +22,6 @@ class ComparePages extends Component {
                   urlPage="/"
                />
                <div className="grid grid-cols-2 place-content-center gap-2 mb-4">
-
                   {
                      compare.compare && compare.compare.map((item, index) => {
                         return (

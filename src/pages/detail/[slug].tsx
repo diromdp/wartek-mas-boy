@@ -37,7 +37,6 @@ class Detail extends Component<Props, State> {
       data.egg_groups && data.egg_groups.map((item: any) => {
          egg_group.push(item.group.name)
       })
-      console.log(evolution)
 
       return (
          <main className={styles.container}>
