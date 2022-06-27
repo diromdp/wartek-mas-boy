@@ -90,7 +90,7 @@ const Home: FunctionComponent<Props> = () => {
          const dataCurrent: any = poko;
          const offsetVal = variables.limit + val;
          let queryVar: any = {};
-         if(filterType.length != 0) {
+         if(filterType && filterType.length != 0) {
             queryVar = {
                query: PokemonQueryGrapQLFilter,
                variables: { filterName: filterType, limit: variables.limit, offset: offsetVal }
@@ -116,7 +116,7 @@ const Home: FunctionComponent<Props> = () => {
       const data: any = []
       data.push(val);
 
-      if (valueCompare.length < 2) {
+      if (valueCompare && valueCompare.length < 2) {
          const finalData = valueCompare.concat(data);
          setValueCompare(finalData)
          dispatch(getDataCompare(finalData))
@@ -146,11 +146,11 @@ const Home: FunctionComponent<Props> = () => {
 
    const _handlerSuccess = () => {
       const dataPoko: any = poko;
-      const length: number = dataPoko.length
+      const length: number = dataPoko && dataPoko.length
       return (
          <>
             <InfiniteScroll
-               dataLength={dataPoko.length}
+               dataLength={dataPoko && dataPoko.length}
                next={() => fetchMoreData(length)}
                hasMore={true}
                className="grid grid-cols-2 gap-6"
@@ -300,7 +300,7 @@ const Home: FunctionComponent<Props> = () => {
                            </div>
                            <div className="flex flex-row items-center">
                               {
-                                 valueCompare.length < 2 &&
+                                valueCompare &&  valueCompare.length < 2 &&
                                  <Button
                                     className="bg-slate-300"
                                     mr={3}
@@ -313,7 +313,7 @@ const Home: FunctionComponent<Props> = () => {
                                  </Button>
                               }
                               {
-                                 valueCompare.length == 2 &&
+                                valueCompare && valueCompare.length == 2 &&
                                  <Button
                                     className="bg-blue-400 text-base text-white rounded-xl"
                                     mr={3}
